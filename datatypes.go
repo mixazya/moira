@@ -205,22 +205,23 @@ const (
 
 // Trigger represents trigger data object
 type Trigger struct {
-	ID               string        `json:"id"`
-	Name             string        `json:"name"`
-	Desc             *string       `json:"desc,omitempty"`
-	Targets          []string      `json:"targets"`
-	WarnValue        *float64      `json:"warn_value"`
-	ErrorValue       *float64      `json:"error_value"`
-	TriggerType      string        `json:"trigger_type"`
-	Tags             []string      `json:"tags"`
-	TTLState         *TTLState     `json:"ttl_state,omitempty"`
-	TTL              int64         `json:"ttl,omitempty"`
-	Schedule         *ScheduleData `json:"sched,omitempty"`
-	Expression       *string       `json:"expression,omitempty"`
-	PythonExpression *string       `json:"python_expression,omitempty"`
-	Patterns         []string      `json:"patterns"`
-	IsRemote         bool          `json:"is_remote"`
-	MuteNewMetrics   bool          `json:"mute_new_metrics"`
+	ID               string          `json:"id"`
+	Name             string          `json:"name"`
+	Desc             *string         `json:"desc,omitempty"`
+	Targets          []string        `json:"targets"`
+	WarnValue        *float64        `json:"warn_value"`
+	ErrorValue       *float64        `json:"error_value"`
+	TriggerType      string          `json:"trigger_type"`
+	Tags             []string        `json:"tags"`
+	TTLState         *TTLState       `json:"ttl_state,omitempty"`
+	TTL              int64           `json:"ttl,omitempty"`
+	Schedule         *ScheduleData   `json:"sched,omitempty"`
+	Expression       *string         `json:"expression,omitempty"`
+	PythonExpression *string         `json:"python_expression,omitempty"`
+	Patterns         []string        `json:"patterns"`
+	IsRemote         bool            `json:"is_remote"`
+	MuteNewMetrics   bool            `json:"mute_new_metrics"`
+	AloneMetrics     map[string]bool `json:"alone_metrics"`
 }
 
 // TriggerCheck represents trigger data with last check data and check timestamp
@@ -240,6 +241,7 @@ type MaintenanceCheck interface {
 // CheckData represents last trigger check data
 type CheckData struct {
 	Metrics                      map[string]MetricState `json:"metrics"`
+	MetricsToTargetRelation      map[string]string      `json:"metrics_to_target_relation"`
 	Score                        int64                  `json:"score"`
 	State                        State                  `json:"state"`
 	Maintenance                  int64                  `json:"maintenance,omitempty"`
@@ -254,14 +256,25 @@ type CheckData struct {
 
 // MetricState represents metric state data for given timestamp
 type MetricState struct {
-	EventTimestamp  int64           `json:"event_timestamp"`
-	State           State           `json:"state"`
-	Suppressed      bool            `json:"suppressed"`
-	SuppressedState State           `json:"suppressed_state,omitempty"`
-	Timestamp       int64           `json:"timestamp"`
-	Value           *float64        `json:"value,omitempty"`
-	Maintenance     int64           `json:"maintenance,omitempty"`
-	MaintenanceInfo MaintenanceInfo `json:"maintenance_info"`
+	EventTimestamp  int64              `json:"event_timestamp"`
+	State           State              `json:"state"`
+	Suppressed      bool               `json:"suppressed"`
+	SuppressedState State              `json:"suppressed_state,omitempty"`
+	Timestamp       int64              `json:"timestamp"`
+	Value           *float64           `json:"value,omitempty"`
+	Values          map[string]float64 `json:"values,omitempty"`
+	Maintenance     int64              `json:"maintenance,omitempty"`
+	MaintenanceInfo MaintenanceInfo    `json:"maintenance_info"`
+	// AloneMetrics    map[string]string  `json:"alone_metrics"` // represents a relation between name of alone metrics and their targets
+}
+
+// ConvertValue is a function that takes converts value to map of values.
+// Compatibility with moira version < 2.6.0,
+func (metricState MetricState) ConvertValue() {
+	if metricState.Value != nil {
+		metricState.Values = map[string]float64{"t1": *metricState.Value}
+		metricState.Value = nil
+	}
 }
 
 // SetMaintenance set maintenance user, time for MetricState

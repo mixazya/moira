@@ -7,7 +7,7 @@ import (
 	"github.com/beevee/go-chart"
 	"github.com/beevee/go-chart/util"
 	"github.com/moira-alert/moira"
-	"github.com/moira-alert/moira/metric_source"
+	metricSource "github.com/moira-alert/moira/metric_source"
 )
 
 const (
@@ -29,7 +29,7 @@ type plotLimits struct {
 }
 
 // resolveLimits returns common plot limits
-func resolveLimits(metricsData []*metricSource.MetricData) plotLimits {
+func resolveLimits(metricsData []metricSource.MetricData) plotLimits {
 	allValues := make([]float64, 0)
 	allTimes := make([]time.Time, 0)
 	for _, metricData := range metricsData {

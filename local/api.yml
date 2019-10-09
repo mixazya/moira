@@ -6,7 +6,7 @@ redis:
 graphite:
   enabled: true
   runtime_stats: true
-  uri: "relay:2003"
+  uri: "graphite:2003"
   prefix: moira
   interval: 60s
 remote:

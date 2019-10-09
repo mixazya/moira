@@ -105,6 +105,8 @@ func (triggerChecker *TriggerChecker) compareMetricStates(metric string, current
 	currentState.Suppressed = false
 	currentState.SuppressedState = ""
 
+	currentValue := currentState.Values["t1"]
+
 	err := triggerChecker.database.PushNotificationEvent(&moira.NotificationEvent{
 		TriggerID:        triggerChecker.triggerID,
 		State:            currentState.State,
@@ -112,7 +114,7 @@ func (triggerChecker *TriggerChecker) compareMetricStates(metric string, current
 		Timestamp:        currentState.Timestamp,
 		Metric:           metric,
 		MessageEventInfo: eventInfo,
-		Value:            currentState.Value,
+		Value:            &currentValue,
 	}, true)
 	return currentState, err
 }

@@ -7,7 +7,7 @@ import (
 
 	"github.com/beevee/go-chart"
 	"github.com/moira-alert/moira"
-	"github.com/moira-alert/moira/metric_source"
+	metricSource "github.com/moira-alert/moira/metric_source"
 	"github.com/moira-alert/moira/metric_source/local"
 	"github.com/moira-alert/moira/plotting"
 )
@@ -105,7 +105,7 @@ func alignToMinutes(unixTime int64) int64 {
 }
 
 // evaluateTriggerMetrics returns collection of MetricData
-func (notifier *StandardNotifier) evaluateTriggerMetrics(from, to int64, triggerID string) ([]*metricSource.MetricData, *moira.Trigger, error) {
+func (notifier *StandardNotifier) evaluateTriggerMetrics(from, to int64, triggerID string) ([]metricSource.MetricData, *moira.Trigger, error) {
 	trigger, err := notifier.database.GetTrigger(triggerID)
 	if err != nil {
 		return nil, nil, err
@@ -114,7 +114,7 @@ func (notifier *StandardNotifier) evaluateTriggerMetrics(from, to int64, trigger
 	if err != nil {
 		return nil, &trigger, err
 	}
-	var metricsData = make([]*metricSource.MetricData, 0)
+	var metricsData = make([]metricSource.MetricData, 0)
 	for _, target := range trigger.Targets {
 		timeSeries, fetchErr := fetchAvailableSeries(metricsSource, target, from, to)
 		if fetchErr != nil {
@@ -126,7 +126,7 @@ func (notifier *StandardNotifier) evaluateTriggerMetrics(from, to int64, trigger
 }
 
 // fetchAvailableSeries calls fetch function with realtime alerting and retries on fail without
-func fetchAvailableSeries(metricsSource metricSource.MetricSource, target string, from, to int64) ([]*metricSource.MetricData, error) {
+func fetchAvailableSeries(metricsSource metricSource.MetricSource, target string, from, to int64) ([]metricSource.MetricData, error) {
 	realtimeFetchResult, realtimeErr := metricsSource.Fetch(target, from, to, true)
 	switch realtimeErr.(type) {
 	case local.ErrEvaluateTargetFailedWithPanic:
@@ -140,7 +140,7 @@ func fetchAvailableSeries(metricsSource metricSource.MetricSource, target string
 }
 
 // getMetricDataToShow returns MetricData limited by whitelist
-func getMetricDataToShow(metricsData []*metricSource.MetricData, metricsWhitelist []string) []*metricSource.MetricData {
+func getMetricDataToShow(metricsData []metricSource.MetricData, metricsWhitelist []string) []metricSource.MetricData {
 	if len(metricsWhitelist) == 0 {
 		return metricsData
 	}
@@ -149,7 +149,7 @@ func getMetricDataToShow(metricsData []*metricSource.MetricData, metricsWhitelis
 		metricsWhitelistHash[whiteListed] = struct{}{}
 	}
 
-	newMetricsData := make([]*metricSource.MetricData, 0, len(metricsWhitelist))
+	newMetricsData := make([]metricSource.MetricData, 0, len(metricsWhitelist))
 	for _, metricData := range metricsData {
 		if _, ok := metricsWhitelistHash[metricData.Name]; ok {
 			newMetricsData = append(newMetricsData, metricData)

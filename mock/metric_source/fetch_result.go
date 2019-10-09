@@ -34,10 +34,10 @@ func (m *MockFetchResult) EXPECT() *MockFetchResultMockRecorder {
 }
 
 // GetMetricsData mocks base method
-func (m *MockFetchResult) GetMetricsData() []*metric_source.MetricData {
+func (m *MockFetchResult) GetMetricsData() []metric_source.MetricData {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetMetricsData")
-	ret0, _ := ret[0].([]*metric_source.MetricData)
+	ret0, _ := ret[0].([]metric_source.MetricData)
 	return ret0
 }
 

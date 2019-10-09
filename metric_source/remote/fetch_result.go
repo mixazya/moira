@@ -3,17 +3,17 @@ package remote
 import (
 	"fmt"
 
-	"github.com/moira-alert/moira/metric_source"
+	metricSource "github.com/moira-alert/moira/metric_source"
 )
 
 // FetchResult is implementation of metric_source.FetchResult interface,
 // which represent fetching result from remote graphite installation in moira format
 type FetchResult struct {
-	MetricsData []*metricSource.MetricData
+	MetricsData []metricSource.MetricData
 }
 
 // GetMetricsData return all metrics data from fetch result
-func (fetchResult *FetchResult) GetMetricsData() []*metricSource.MetricData {
+func (fetchResult *FetchResult) GetMetricsData() []metricSource.MetricData {
 	return fetchResult.MetricsData
 }
 

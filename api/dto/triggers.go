@@ -10,7 +10,7 @@ import (
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/middleware"
 	"github.com/moira-alert/moira/expression"
-	"github.com/moira-alert/moira/metric_source"
+	metricSource "github.com/moira-alert/moira/metric_source"
 )
 
 type TriggersList struct {
@@ -305,10 +305,7 @@ func (*SaveTriggerResponse) Render(w http.ResponseWriter, r *http.Request) error
 	return nil
 }
 
-type TriggerMetrics struct {
-	Main       map[string][]*moira.MetricValue `json:"main"`
-	Additional map[string][]*moira.MetricValue `json:"additional,omitempty"`
-}
+type TriggerMetrics map[string]map[string][]moira.MetricValue
 
 func (*TriggerMetrics) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil

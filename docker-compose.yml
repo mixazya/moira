@@ -4,7 +4,9 @@ services:
   redis:
     image: redis:alpine
     volumes:
-     - data:/data
+      - /Users/emilsharifullin/projects/kontur/moira/redis_data:/data
+    ports:
+      - 6379:6379
 
   graphite:
     image: graphiteapp/graphite-statsd

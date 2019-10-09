@@ -10,7 +10,7 @@ import (
 	"github.com/go-graphite/carbonapi/expr/types"
 	"github.com/go-graphite/carbonapi/pkg/parser"
 	"github.com/moira-alert/moira"
-	"github.com/moira-alert/moira/metric_source"
+	metricSource "github.com/moira-alert/moira/metric_source"
 )
 
 // Local is implementation of MetricSource interface, which implements fetch metrics method from moira database installation
@@ -83,7 +83,7 @@ func (local *Local) Fetch(target string, from int64, until int64, allowRealTimeA
 			}
 			for _, metricData := range metricsData {
 				md := *metricData
-				result.MetricsData = append(result.MetricsData, &metricSource.MetricData{
+				result.MetricsData = append(result.MetricsData, metricSource.MetricData{
 					Name:      md.Name,
 					StartTime: md.StartTime,
 					StopTime:  md.StopTime,

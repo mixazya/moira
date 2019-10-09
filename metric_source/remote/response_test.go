@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/moira-alert/moira/metric_source"
+	metricSource "github.com/moira-alert/moira/metric_source"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -59,8 +59,8 @@ func TestDecodeBody(t *testing.T) {
 }
 
 func TestConvertResponse(t *testing.T) {
-	d := metricSource.MakeMetricData("test", []float64{1, 2, 3}, 20, 0)
-	data := []*metricSource.MetricData{d}
+	d := *metricSource.MakeMetricData("test", []float64{1, 2, 3}, 20, 0)
+	data := []metricSource.MetricData{d}
 	Convey("Given data and allowRealTimeAlerting is set", t, func() {
 		fetchResult := convertResponse(data, true)
 		Convey("response should contain last value", func() {

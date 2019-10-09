@@ -13,7 +13,7 @@ import (
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/controller"
 	"github.com/moira-alert/moira/api/middleware"
-	"github.com/moira-alert/moira/metric_source"
+	metricSource "github.com/moira-alert/moira/metric_source"
 	"github.com/moira-alert/moira/plotting"
 )
 
@@ -65,18 +65,19 @@ func getEvaluationParameters(request *http.Request) (sourceProvider *metricSourc
 	return
 }
 
-func evaluateTriggerMetrics(metricSourceProvider *metricSource.SourceProvider, from, to int64, triggerID string, fetchRealtimeData bool) ([]*metricSource.MetricData, *moira.Trigger, error) {
+func evaluateTriggerMetrics(metricSourceProvider *metricSource.SourceProvider, from, to int64, triggerID string, fetchRealtimeData bool) ([]metricSource.MetricData, *moira.Trigger, error) {
 	tts, trigger, err := controller.GetTriggerEvaluationResult(database, metricSourceProvider, from, to, triggerID, fetchRealtimeData)
 	if err != nil {
 		return nil, trigger, err
 	}
-	var metricsData = make([]*metricSource.MetricData, 0, len(tts.Main)+len(tts.Additional))
-	metricsData = append(metricsData, tts.Main...)
-	metricsData = append(metricsData, tts.Additional...)
+	var metricsData = make([]metricSource.MetricData, 0, len(tts))
+	for _, metrics := range tts {
+		metricsData = append(metricsData, metrics...)
+	}
 	return metricsData, trigger, err
 }
 
-func buildRenderable(request *http.Request, trigger *moira.Trigger, metricsData []*metricSource.MetricData) (*chart.Chart, error) {
+func buildRenderable(request *http.Request, trigger *moira.Trigger, metricsData []metricSource.MetricData) (*chart.Chart, error) {
 	timezone := request.URL.Query().Get("timezone")
 	location, err := time.LoadLocation(timezone)
 	if err != nil {

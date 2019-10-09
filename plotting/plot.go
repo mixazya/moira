@@ -6,7 +6,7 @@ import (
 
 	"github.com/beevee/go-chart"
 	"github.com/moira-alert/moira"
-	"github.com/moira-alert/moira/metric_source"
+	metricSource "github.com/moira-alert/moira/metric_source"
 )
 
 // ErrNoPointsToRender is used to prevent unnecessary render calls
@@ -45,7 +45,7 @@ func GetPlotTemplate(theme string, location *time.Location) (*Plot, error) {
 }
 
 // GetRenderable returns go-chart to render
-func (plot *Plot) GetRenderable(trigger *moira.Trigger, metricsData []*metricSource.MetricData) (chart.Chart, error) {
+func (plot *Plot) GetRenderable(trigger *moira.Trigger, metricsData []metricSource.MetricData) (chart.Chart, error) {
 	var renderable chart.Chart
 
 	plotSeries := make([]chart.Series, 0)
