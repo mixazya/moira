@@ -7,16 +7,15 @@ import (
 	"time"
 
 	"github.com/golang/mock/gomock"
-	"github.com/moira-alert/moira/metric_source"
+	"github.com/moira-alert/moira"
+	metricSource "github.com/moira-alert/moira/metric_source"
 	"github.com/moira-alert/moira/metric_source/local"
 	"github.com/moira-alert/moira/metric_source/remote"
-	"github.com/moira-alert/moira/mock/metric_source"
+	"github.com/moira-alert/moira/metrics/graphite/go-metrics"
+	mock_metric_source "github.com/moira-alert/moira/mock/metric_source"
+	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 	"github.com/op/go-logging"
 	. "github.com/smartystreets/goconvey/convey"
-
-	"github.com/moira-alert/moira"
-	"github.com/moira-alert/moira/metrics/graphite/go-metrics"
-	"github.com/moira-alert/moira/mock/moira-alert"
 )
 
 func TestGetMetricDataState(t *testing.T) {
@@ -1287,4 +1286,165 @@ func TestHandleTriggerCheck(t *testing.T) {
 		So(err, ShouldBeNil)
 		So(actual, ShouldResemble, expected)
 	})
+}
+
+func TestTriggerChecker_Check(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+	source := mock_metric_source.NewMockMetricSource(mockCtrl)
+	fetchResult := mock_metric_source.NewMockFetchResult(mockCtrl)
+	logger, _ := logging.GetLogger("Test")
+	defer mockCtrl.Finish()
+
+	var retention int64 = 10
+	var warnValue float64 = 10
+	var errValue float64 = 20
+	pattern := "super.puper.pattern"
+	metric := "super.puper.metric"
+
+	var ttl int64 = 30
+
+	triggerChecker := TriggerChecker{
+		triggerID: "SuperId",
+		database:  dataBase,
+		source:    source,
+		logger:    logger,
+		config: &Config{
+			MetricsTTLSeconds: 10,
+		},
+		metrics:  metrics.ConfigureCheckerMetrics("checker", false).LocalMetrics,
+		from:     17,
+		until:    67,
+		ttl:      ttl,
+		ttlState: moira.TTLStateNODATA,
+		trigger: &moira.Trigger{
+			Name:        "Super trigger",
+			ErrorValue:  &errValue,
+			WarnValue:   &warnValue,
+			TriggerType: moira.RisingTrigger,
+			Targets:     []string{pattern},
+			Patterns:    []string{pattern},
+		},
+		lastCheck: &moira.CheckData{
+			State:     moira.StateOK,
+			Timestamp: 57,
+			Metrics: map[string]moira.MetricState{
+				metric: {
+					State:     moira.StateOK,
+					Timestamp: 26,
+				},
+			},
+		},
+	}
+	lastValue := float64(4)
+	eventMetrics := map[string]moira.MetricState{
+		metric: {
+			EventTimestamp: 17,
+			State:          moira.StateOK,
+			Suppressed:     false,
+			Timestamp:      57,
+			Value:          &lastValue,
+		},
+	}
+
+	lastCheck := moira.CheckData{
+		Metrics:                      eventMetrics,
+		State:                        moira.StateOK,
+		Timestamp:                    triggerChecker.until,
+		EventTimestamp:               0,
+		Score:                        0,
+		LastSuccessfulCheckTimestamp: triggerChecker.until,
+	}
+
+	dataBase.EXPECT().RemoveMetricsValues([]string{metric}, int64(57)).Return(nil)
+	source.EXPECT().Fetch(pattern, triggerChecker.from, triggerChecker.until, true).Return(fetchResult, nil)
+	fetchResult.EXPECT().GetMetricsData().Return([]*metricSource.MetricData{metricSource.MakeMetricData(metric, []float64{0, 1, 2, 3, 4}, retention, triggerChecker.from)})
+	fetchResult.EXPECT().GetPatternMetrics().Return([]string{metric}, nil)
+	dataBase.EXPECT().SetTriggerLastCheck(triggerChecker.triggerID, &lastCheck, triggerChecker.trigger.IsRemote).Return(nil)
+	_ = triggerChecker.Check()
+
+}
+func BenchmarkTriggerChecker_Check(b *testing.B) {
+	if testing.Short() {
+		b.Skip()
+	}
+	b.ReportAllocs()
+	mockCtrl := gomock.NewController(b)
+	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+	source := mock_metric_source.NewMockMetricSource(mockCtrl)
+	fetchResult := mock_metric_source.NewMockFetchResult(mockCtrl)
+	logger, _ := logging.GetLogger("Test")
+	defer mockCtrl.Finish()
+
+	var retention int64 = 10
+	var warnValue float64 = 10
+	var errValue float64 = 20
+	pattern := "super.puper.pattern"
+	metric := "super.puper.metric"
+
+	var ttl int64 = 30
+
+	triggerChecker := TriggerChecker{
+		triggerID: "SuperId",
+		database:  dataBase,
+		source:    source,
+		logger:    logger,
+		config: &Config{
+			MetricsTTLSeconds: 10,
+		},
+		metrics:  metrics.ConfigureCheckerMetrics("checker", false).LocalMetrics,
+		from:     17,
+		until:    67,
+		ttl:      ttl,
+		ttlState: moira.TTLStateNODATA,
+		trigger: &moira.Trigger{
+			Name:        "Super trigger",
+			ErrorValue:  &errValue,
+			WarnValue:   &warnValue,
+			TriggerType: moira.RisingTrigger,
+			Targets:     []string{pattern},
+			Patterns:    []string{pattern},
+		},
+		lastCheck: &moira.CheckData{
+			State:     moira.StateOK,
+			Timestamp: 57,
+			Metrics: map[string]moira.MetricState{
+				metric: {
+					State:     moira.StateOK,
+					Timestamp: 26,
+				},
+			},
+		},
+	}
+	lastValue := float64(4)
+	eventMetrics := map[string]moira.MetricState{
+		metric: {
+			EventTimestamp: 17,
+			State:          moira.StateOK,
+			Suppressed:     false,
+			Timestamp:      57,
+			Value:          &lastValue,
+		},
+	}
+
+	lastCheck := moira.CheckData{
+		Metrics:                      eventMetrics,
+		State:                        moira.StateOK,
+		Timestamp:                    triggerChecker.until,
+		EventTimestamp:               0,
+		Score:                        0,
+		LastSuccessfulCheckTimestamp: triggerChecker.until,
+	}
+
+	dataBase.EXPECT().RemoveMetricsValues([]string{metric}, int64(57)).Return(nil).AnyTimes()
+	source.EXPECT().Fetch(pattern, triggerChecker.from, triggerChecker.until, true).Return(fetchResult, nil).AnyTimes()
+	fetchResult.EXPECT().GetMetricsData().Return([]*metricSource.MetricData{metricSource.MakeMetricData(metric, []float64{0, 1, 2, 3, 4}, retention, triggerChecker.from)}).AnyTimes()
+	fetchResult.EXPECT().GetPatternMetrics().Return([]string{metric}, nil).AnyTimes()
+	dataBase.EXPECT().SetTriggerLastCheck(triggerChecker.triggerID, &lastCheck, triggerChecker.trigger.IsRemote).Return(nil).AnyTimes()
+	for n := 0; n < b.N; n++ {
+		err := triggerChecker.Check()
+		if err != nil {
+			b.Errorf("Check() returned error: %w", err)
+		}
+	}
 }
